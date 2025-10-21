@@ -38,7 +38,7 @@ public class Plugin : BaseUnityPlugin
         var tiredTitle = Register.RegisterLocalization(100_003, CN: "摸鱼");
         var tiredDesc = Register.RegisterLocalization(100_004, CN: "一定回合内无法被选中，但是可以触发被动效果");
         var invitedTitle = Register.RegisterLocalization(100_005, CN: "二号位有请");
-        var invitedDesc = Register.RegisterLocalization(100_006, CN: "层数高于单位稀有度（最低为1）时，获得一个原版复制");
+        var invitedDesc = Register.RegisterLocalization(100_006, CN: "层数高于单位稀有度（最低为1）时，在准备区获得一个原版复制");
         var invincibleTitle = Register.RegisterLocalization(100_007, CN: "无敌");
         var invincibleDesc = Register.RegisterLocalization(100_008, CN: "抵挡一次受到的伤害");
 

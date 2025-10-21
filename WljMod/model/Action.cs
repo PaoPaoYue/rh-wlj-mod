@@ -219,6 +219,15 @@ public class ActionSelfStealAttackFromEnemy : EventActionBase
         Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
         Vector3 enemyPosition = Singleton<Model>.Instance.Enemy.GetEnemyPosition(base.Owner);
         int orderID = base.OrderID;
+        if (rEnemy.GetAttribute(nAddType) < nAddCount)
+        {
+            nAddCount = rEnemy.GetAttribute(nAddType);
+        }
+        if (nAddCount <= 0)
+        {
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(orderID);
+            return;
+        }
         UIAnimText.ShowFlyText(enemyPosition, lotteCellPosition, attributeIcon, StringUtil.AddNumberToString(nAddCount), delegate
         {
             elementData.ChangeAttribute(nAddType, nAddCount);
