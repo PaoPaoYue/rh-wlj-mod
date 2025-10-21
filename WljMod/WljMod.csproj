@@ -28,6 +28,10 @@
       <HintPath>../libs/UIFrame.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>../libs/UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="BaseMod">
       <HintPath>../libs/BaseMod.dll</HintPath>
       <Private>false</Private>
