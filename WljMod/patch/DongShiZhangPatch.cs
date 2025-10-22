@@ -3,9 +3,20 @@ using Game;
 
 namespace WljMod;
 
-static class ElementModelPatch
+static class DongShiZhangPatch
 {
-    static int DongShiZhangId = 100_019;
+
+    static int BattleCryRepeat = 0;
+
+    public static bool CanBattleCryRepeat
+    {
+        get
+        {
+            return BattleCryRepeat > 0;
+        }
+    }
+
+    static int DongShiZhangId = 100_009;
 
     [HarmonyPatch(typeof(ElementModel), "AddAllPassiveAttribute")]
     [HarmonyPostfix]
@@ -14,12 +25,11 @@ static class ElementModelPatch
         for (int i = 0; i < __instance.LoopItemCount; i++)
         {
             ElementEntity elementData = __instance.GetElementData(i, rOwner);
-            if (elementData.Fill && elementData.Enable && !elementData.Wait)
+            if (elementData != null && elementData.Fill && elementData.Enable && !elementData.Wait)
             {
                 if (elementData.ID == DongShiZhangId)
                 {
-                    var attrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.BatleCryRepeat);
-                    Singleton<Model>.Instance.Buff.GetPlayerEntity(rOwner).ChangeAttribute(attrId, 1);
+                    BattleCryRepeat++;
                 }
             }
         }
@@ -27,15 +37,17 @@ static class ElementModelPatch
 
     [HarmonyPatch(typeof(ElementModel), "ChangePassiveAttribute")]
     [HarmonyPostfix]
-    static void ChangePassiveAttributePostfix(ElementModel __instance, int nIndex, bool bAdd, EEntityType rOwner,  bool bExchange = false)
+    static void ChangePassiveAttributePostfix(ElementModel __instance, int nIndex, bool bAdd, EEntityType rOwner, bool bExchange = false)
     {
         ElementEntity elementData = __instance.GetElementData(nIndex, rOwner);
         if (!bExchange && elementData != null && elementData.Fill && elementData.Enable && !elementData.Wait)
         {
             if (elementData.ID == DongShiZhangId)
             {
-                var attrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.BatleCryRepeat);
-                Singleton<Model>.Instance.Buff.GetPlayerEntity(rOwner).ChangeAttribute(attrId, bAdd ? 1 : -1);
+                if (bAdd)
+                    BattleCryRepeat++;
+                else
+                    BattleCryRepeat--;
             }
         }
     }

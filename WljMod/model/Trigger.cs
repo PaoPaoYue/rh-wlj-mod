@@ -17,11 +17,9 @@ public class BattleCryTrigger : ElementTrigger
             var hasDoneBattleCry = element.GetAttribute(attrId);
             if (hasDoneBattleCry == 0)
             {
-                element.SetAttribute(attrId, 1, true); // Mark as done
+                element.SetAttribute(attrId, 1, false); // Mark as done
                 var eventId = Plugin.Register.GetEventId((int)Plugin.Event.OnBattleCry);
-                var repeatAttrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.BatleCryRepeat);
-                var repeat = Singleton<Model>.Instance.Buff.GetPlayerEntity(element.Owner).GetAttribute(repeatAttrId);
-                for (int i = 0; i < (repeat > 0 ? 2 : 1); i++)
+                for (int i = 0; i < (DongShiZhangPatch.CanBattleCryRepeat ? 2 : 1); i++)
                 {
                     Singleton<GameEventManager>.Instance.Dispatch(eventId, [((ElementEntity)element).Index, element.Owner]);
                 }

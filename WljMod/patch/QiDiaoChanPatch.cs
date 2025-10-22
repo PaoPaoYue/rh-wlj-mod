@@ -26,7 +26,8 @@ class QiDiaoChanPatch
             return;
         foreach (var (attrId, addition) in attrAddDict)
         {
-            var value = __instance.AttributeDict[attrId];
+
+            __instance.AttributeDict.TryGetValue(attrId, out int value);
             value += addition * nLevel;
             __instance.SetAttribute(attrId, value, false);
         }
@@ -40,7 +41,7 @@ class QiDiaoChanPatch
             return;
         foreach (var (attrId, addition) in attrAddDict)
         {
-            var value = __instance.AttributeDict[attrId];
+            __instance.AttributeDict.TryGetValue(attrId, out int value);
             value += addition;
             __instance.SetAttribute(attrId, value, false);
         }
@@ -65,9 +66,9 @@ class QiDiaoChanPatch
         }
     }
 
-    [HarmonyPatch(typeof(ElementModel), "SellLoopItem")]
+    [HarmonyPatch(typeof(ElementModel.ElementInteractive), "SellLoopItem")]
     [HarmonyPrefix]
-    static bool SellLoopItemPrefix(ElementModel __instance, int nLoopIndex, out bool __state)
+    static bool SellLoopItemPrefix(ElementModel.ElementInteractive __instance, int nLoopIndex, out bool __state)
     {
         __state = false;
         if (nLoopIndex == -1)
@@ -83,16 +84,18 @@ class QiDiaoChanPatch
             return true;
         __state = true;
         // record the attribute values before selling
-        foreach (var (attrId, _) in attrAddDict)
+        var keys = new List<int>(attrAddDict.Keys);
+        foreach (var attrId in keys)
         {
-            attrAddDict[attrId] = elementData.AttributeDict[attrId];
+            elementData.AttributeDict.TryGetValue(attrId, out int value);
+            attrAddDict[attrId] += value;
         }
         return true;
     }
     
-    [HarmonyPatch(typeof(ElementModel), "SellLoopItem")]
+    [HarmonyPatch(typeof(ElementModel.ElementInteractive), "SellLoopItem")]
     [HarmonyPostfix]
-    static void SellLoopItemPostfix(ElementModel __instance, int nLoopIndex, bool __state)
+    static void SellLoopItemPostfix(ElementModel.ElementInteractive __instance, int nLoopIndex, bool __state)
     {
         if (__state)
             Singleton<GameEventManager>.Instance.Dispatch(10015, []);

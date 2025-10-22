@@ -18,7 +18,6 @@ public class Plugin : BaseUnityPlugin
         Tired = 100_002,
         Invited = 100_003,
         Invincible = 100_004,
-        BatleCryRepeat = 100_005,
     }
 
     public enum Event
@@ -34,20 +33,19 @@ public class Plugin : BaseUnityPlugin
 
         // reigster localization
         var battleCryTitle = Register.RegisterLocalization(100_001, CN: "战吼");
-        var battleCryDesc = Register.RegisterLocalization(100_002, CN: "首次放入轮盘时触发战吼效果");
+        var battleCryDesc = Register.RegisterLocalization(100_002, CN: "首次放入轮盘时触发战吼效果。");
         var tiredTitle = Register.RegisterLocalization(100_003, CN: "摸鱼");
-        var tiredDesc = Register.RegisterLocalization(100_004, CN: "一定回合内无法被选中，但是可以触发被动效果");
-        var invitedTitle = Register.RegisterLocalization(100_005, CN: "二号位有请");
-        var invitedDesc = Register.RegisterLocalization(100_006, CN: "层数高于单位稀有度（最低为1）时，在准备区获得一个原版复制");
+        var tiredDesc = Register.RegisterLocalization(100_004, CN: "一定回合内无法被选中，但是可以触发被动效果。");
+        var invitedTitle = Register.RegisterLocalization(100_005, CN: "邀为同道");
+        var invitedDesc = Register.RegisterLocalization(100_006, CN: "层数等于单位稀有度（最低为1）时，在准备区获得一个原版复制。");
         var invincibleTitle = Register.RegisterLocalization(100_007, CN: "无敌");
-        var invincibleDesc = Register.RegisterLocalization(100_008, CN: "抵挡一次受到的伤害");
+        var invincibleDesc = Register.RegisterLocalization(100_008, CN: "抵挡一次受到的伤害。");
 
         // custom attributes
         Register.RegisterEntityAttribute((int)Attribute.BattleCry);
         Register.RegisterVisableAttribute((int)Attribute.Tired, "wlj_attr_tired");
         Register.RegisterVisableAttribute((int)Attribute.Invited, "wlj_attr_invited");
         Register.RegisterVisableAttribute((int)Attribute.Invincible, "wlj_attr_invincible");
-        Register.RegisterEntityAttribute((int)Attribute.BatleCryRepeat);
 
         // custom keywords
         Register.RegisterDescTip(100_001, new DescTip(battleCryTitle, battleCryDesc));
@@ -74,18 +72,19 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterEventAction(100_006, new ActionSelfStealAttackFromEnemy());
         Register.RegisterEventAction(100_007, new ActionStealHalfAttrsFromRandomTired());
         Register.RegisterEventAction(100_008, new ActionSummonPrepare());
-        Register.RegisterEventAction(100_009, new ActionSelfUpdgrade());
+        Register.RegisterEventAction(100_009, new ActionSumSelfUpdgrade());
         Register.RegisterEventAction(100_010, new ActionInvite());
         Register.RegisterEventAction(100_011, new ActionSummonPrepareNoBattleCry());
         Register.RegisterEventAction(100_012, new ActionSumSpecialRefresh());
         Register.RegisterEventAction(100_013, new ActionSmallRotateAndChange());
         Register.RegisterEventAction(100_014, new ActionSummonAndSplitAttr());
+        Register.RegisterEventAction(100_015, new ActionSumSpecialChange());
 
         // apply patches
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(BattleLoopManagerPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(BattleManagerPatch));
+        HarmonyLib.Harmony.CreateAndPatchAll(typeof(DongShiZhangPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(ElementEntityPatch));
-        HarmonyLib.Harmony.CreateAndPatchAll(typeof(ElementModelPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(PrepareCellPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(QiDiaoChanPatch));
     }

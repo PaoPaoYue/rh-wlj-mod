@@ -27,7 +27,7 @@ static class PrepareCellPatch
         rectTransform.anchorMax = new Vector2(1, 0);
         rectTransform.pivot = new Vector2(1, 0);
 
-        batteCrayImageObjs[nIndex] = imageObj;
+        batteCrayImageObjs.Add(imageObj);
     }
 
     [HarmonyPatch(typeof(PrepareCell), "UpdateData")]
