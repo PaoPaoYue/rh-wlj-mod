@@ -1,6 +1,8 @@
-﻿using BaseMod;
+﻿using System.Collections.Generic;
+using BaseMod;
 using BepInEx;
 using BepInEx.Logging;
+using cfg;
 
 namespace WljMod;
 
@@ -26,6 +28,14 @@ public class Plugin : BaseUnityPlugin
         OnTired = 100_002,
     }
 
+    public enum RelicGlobalValue
+    {
+        Alarm = 100_001,
+        Encourage = 100_002,
+        Alchemy = 100_003,
+        Fire = 100_004,
+    }
+
     private void Awake()
     {
         Logger = base.Logger;
@@ -38,8 +48,33 @@ public class Plugin : BaseUnityPlugin
         var tiredDesc = Register.RegisterLocalization(100_004, CN: "一定回合内无法被选中，但是可以触发被动效果。");
         var invitedTitle = Register.RegisterLocalization(100_005, CN: "邀为同道");
         var invitedDesc = Register.RegisterLocalization(100_006, CN: "层数等于单位稀有度（最低为1）时，在准备区获得一个原版复制。");
-        var invincibleTitle = Register.RegisterLocalization(100_007, CN: "无敌");
+        var invincibleTitle = Register.RegisterLocalization(100_007, CN: "免伤");
         var invincibleDesc = Register.RegisterLocalization(100_008, CN: "抵挡一次受到的伤害。");
+
+        var roleName = Register.RegisterLocalization(200_001, CN: "王老菊");
+        var roleDesc = Register.RegisterLocalization(200_002, CN: "每出售<color=#008E11>{0}</color>个未来科技单位，获得一个<sprite=14>。");
+
+        // Custom Roles
+        Register.RegisterRole(200_001, ReflectionUtil.CreateReadonly<Role>(
+            200_001, // ID
+            "wlj",  // Icon
+            "wlj_portrait", // Portrait
+            "wlj_half", // HalfPortrait
+            roleName, // Name
+            roleDesc, // Description
+            40,  // hp
+            26,  // gold
+            new UnlockCondition(),
+            1,  // enable
+            new List<int> { }, // passive
+            200_001,  // trigger
+            new List<int> { }, // trigger param
+            200_001,  // action
+            new List<int> { 3 },  // action param
+            0,  // sound (unused?)
+            new List<int> { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50 },  // gold growth by level
+            new List<int> { }  // trigger value decrease by level
+        ));
 
         // custom attributes
         Register.RegisterEntityAttribute((int)Attribute.BattleCry);
@@ -63,6 +98,8 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterElementTrigger(100_003, new OnPlayerTurnEndTrigger());
         Register.RegisterElementTrigger(100_004, new OnTiredTrigger());
 
+        Register.RegisterPlayerTrigger(200_001, new SellFutureTechElementTrigger());
+
         // custom actions
         Register.RegisterEventAction(100_001, new ActionTire());
         Register.RegisterEventAction(100_002, new ActionSumTire());
@@ -80,12 +117,26 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterEventAction(100_014, new ActionSummonAndSplitAttr());
         Register.RegisterEventAction(100_015, new ActionSumSpecialChange());
 
+        Register.RegisterEventAction(200_001, new ActionSumAddEvolution());
+
+        Register.RegisterEventAction(300_001, new ActionAddBirdAttrToEmployee());
+        Register.RegisterEventAction(300_002, new ActionAddBattleCryElementToCache());
+        Register.RegisterEventAction(300_003, new ActionInviteSelected());
+        Register.RegisterEventAction(300_004, new ActionResetHelmet());
+
+        // global relic values
+        Register.RegisterRelicGlobalValue((int)RelicGlobalValue.Alarm);
+        Register.RegisterRelicGlobalValue((int)RelicGlobalValue.Encourage);
+        Register.RegisterRelicGlobalValue((int)RelicGlobalValue.Alchemy);
+        Register.RegisterRelicGlobalValue((int)RelicGlobalValue.Fire);
+
         // apply patches
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(BattleLoopManagerPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(BattleManagerPatch));
-        HarmonyLib.Harmony.CreateAndPatchAll(typeof(DongShiZhangPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(ElementEntityPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(PrepareCellPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(QiDiaoChanPatch));
+        HarmonyLib.Harmony.CreateAndPatchAll(typeof(HelmetPatch));
+        HarmonyLib.Harmony.CreateAndPatchAll(typeof(AlchemyPatch));
     }
 }

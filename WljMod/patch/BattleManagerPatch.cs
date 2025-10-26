@@ -1,5 +1,8 @@
 using HarmonyLib;
 using Game;
+using System.Collections.Generic;
+using System.Reflection.Emit;
+using cfg;
 
 namespace WljMod;
 
@@ -19,5 +22,29 @@ static class BattleManagerPatch
                     elementData.ChangeAttribute(attrId, -1);
             }
         }
+    }
+
+    [HarmonyPatch(typeof(BattleManager), "OnEnemyDie")]
+    [HarmonyTranspiler]
+    static IEnumerable<CodeInstruction> OnEnemyDieTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Ldloc_1),
+                new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(Enemy), "Gold")),
+                new CodeMatch(OpCodes.Ldloc_1),
+                new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(Enemy), "GoldMax"))
+            )
+            .Advance(5)
+            .InsertAndAdvance(
+                Transpilers.EmitDelegate(() =>
+                {
+                    var relicAttrId = Plugin.Register.GetRelicGlobalValueId((int)Plugin.RelicGlobalValue.Encourage);
+                    return Singleton<Model>.Instance.Relic.GetRelicGlobalValue(relicAttrId, EEntityType.Player);
+                }
+                 ),
+                new CodeInstruction(OpCodes.Add)
+            )
+            .InstructionEnumeration();
     }
 }

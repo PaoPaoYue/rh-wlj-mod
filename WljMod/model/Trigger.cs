@@ -2,8 +2,29 @@ using BaseMod;
 using Game;
 using cfg;
 using System.Collections.Generic;
+using cfg.element;
 
 namespace WljMod;
+
+// -------------------- Player Triggers --------------------
+
+public class SellFutureTechElementTrigger : PlayerTrigger
+{
+    public SellFutureTechElementTrigger() : base(EventName.OnLoopElementSell) { }
+
+    public override bool OnTrigger(Entity player, Role roleConf, EventArg rEventArg)
+    {
+        if (rEventArg != null && rEventArg.Args.Count > 1 && player.EntityType == EEntityType.Player)
+        {
+            var elementId = rEventArg.Get<int>(1);
+            return ModRegister.IsValidModId(elementId);
+
+        }
+        return false;
+    }
+}
+
+// -------------------- Element Triggers --------------------
 
 public class BattleCryTrigger : ElementTrigger
 {

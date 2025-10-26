@@ -4,8 +4,45 @@ using System.Collections.Generic;
 using UnityEngine;
 using cfg;
 using Feif.UIFramework;
+using BaseMod;
 
 namespace WljMod;
+
+// -------------------- Player Actions --------------------
+
+public class ActionSumAddEvolution : EventActionBase
+{
+    public override void ExcutePlayer(Role rRoleConf)
+    {
+        int threshold = rRoleConf.Params[0]
+            + Singleton<Model>.Instance.Relic.GetRelicGlobalValue(225, base.Owner)
+            + Singleton<Model>.Instance.Relic.GetRelicGlobalValue(104, base.Owner);
+
+        if (threshold <= 0) threshold = 1;
+
+        var player = Singleton<Model>.Instance.Buff.GetPlayerEntity(base.Owner);
+        int currentValue = player.GetAttribute(23);
+        int increment = (base.Param != null && rRoleConf.Params.Count == 2) ? Mathf.Abs(base.Param[0]) : 1;
+
+        currentValue += increment;
+
+        if (currentValue >= threshold)
+        {
+            player.SetAttribute(23, currentValue % threshold, true);
+            Singleton<Model>.Instance.Buff.AddRandomItem(1);
+            Singleton<GameEventManager>.Instance.Dispatch(20015, [base.Owner]);
+        }
+        else
+        {
+            player.ChangeAttribute(23, increment);
+        }
+
+        Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+    }
+}
+
+
+// -------------------- Element Actions --------------------
 
 public class ActionTire : EventActionBase
 {
@@ -111,20 +148,29 @@ public class ActionBlockOrAttackAdd : EventActionBase
 
         int previousId = (elementData.Index + Singleton<Model>.Instance.Element.LoopItemCount - 1) % Singleton<Model>.Instance.Element.LoopItemCount;
         int nextId = (elementData.Index + 1) % Singleton<Model>.Instance.Element.LoopItemCount;
-        for (int i = 0; i < (DongShiZhangPatch.CanBattleCryRepeat ? 2 : 1); i++)
+        var relicAttrId = Plugin.Register.GetRelicGlobalValueId((int)Plugin.RelicGlobalValue.Alarm);
+        bool isAll = Singleton<Model>.Instance.Relic.GetRelicGlobalValue(relicAttrId, base.Owner) > 0;
+        bool repeat = DongShiZhangPatch.CanBattleCryRepeat;
+        for (int i = 0; i < (repeat ? 2 : 1); i++)
         {
-            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(previousId, base.Owner), triggerValue);
-            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(nextId, base.Owner), triggerValue);
+            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(previousId, base.Owner), triggerValue, isAll);
+            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(nextId, base.Owner), triggerValue, isAll);
         }
 
         int orderID = base.OrderID;
         Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(orderID);
     }
 
-    private static void ChangeBlockOrAttack(ElementEntity elementData, int triggerValue)
+    private static void ChangeBlockOrAttack(ElementEntity elementData, int triggerValue, bool all)
     {
         if (elementData == null || !elementData.Fill)
             return;
+        if (all)
+        {
+            elementData.ChangeAttribute(3, triggerValue);
+            elementData.ChangeAttribute(14, triggerValue);
+            return;
+        }
         bool isBlock = UnityEngine.Random.RandomRangeInt(0, 2) == 0;
         int attrId = isBlock ? 14 : 3;
         elementData.ChangeAttribute(attrId, triggerValue);
@@ -154,14 +200,24 @@ public class ActionTiredCountHeal : EventActionBase
                 continue;
             nValue += tempElement.GetAttribute(attrId) > 0 ? triggerValue : 0;
         }
-
-        for (int i = 0; i < (DongShiZhangPatch.CanBattleCryRepeat ? 2 : 1); i++)
+        bool repeat = DongShiZhangPatch.CanBattleCryRepeat;
+        for (int i = 0; i < (repeat ? 2 : 1); i++)
         {
-            elementData.ChangeAttribute(11, nValue);
+            var player = Singleton<Model>.Instance.Buff.GetPlayerEntity(base.Owner);
+            Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
+            Vector3 playerPosition = Singleton<Model>.Instance.Buff.GetPlayerPosition(base.Owner);
+            UIAnimText.ShowFlyText(lotteCellPosition, playerPosition, Singleton<Model>.Instance.Buff.GetAttributeIcon(2), nValue.ToString(), delegate
+            {
+                player.ChangeAttribute(2, nValue);
+            });
         }
 
-        int orderID = base.OrderID;
-        Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(orderID);
+        if (nValue > 0)
+        {
+            Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
+            return;
+        }
+        Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
     }
 }
 
@@ -335,13 +391,13 @@ public class ActionSummonPrepare : EventActionBase
                 }
             }
         }
-        if (nIndex == -1)
+        if (nIndex != -1)
         {
+            Singleton<SoundManager>.Instance.PlaySound(133);
             Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
         }
         else
         {
-            Singleton<SoundManager>.Instance.PlaySound(133);
             Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
         }
     }
@@ -416,8 +472,8 @@ public class ActionInvite : EventActionBase
         int currentValue = previousElement.GetAttribute(attrId);
 
         int nIndex = -1;
-
-        for (int i = 0; i < (DongShiZhangPatch.CanBattleCryRepeat ? 2 : 1); i++)
+        bool repeat = DongShiZhangPatch.CanBattleCryRepeat;
+        for (int i = 0; i < (repeat ? 2 : 1); i++)
         {
             currentValue += 1;
             if (currentValue >= triggerThreshold)
@@ -451,13 +507,13 @@ public class ActionInvite : EventActionBase
         }
 
 
-        if (nIndex == -1)
+        if (nIndex != -1)
         {
+            Singleton<SoundManager>.Instance.PlaySound(133);
             Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
         }
         else
         {
-            Singleton<SoundManager>.Instance.PlaySound(133);
             Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
         }
     }
@@ -476,8 +532,10 @@ public class ActionSummonPrepareNoBattleCry : EventActionBase
         }
 
         int summonElementId = otherValue[0];
+        int nCount = 1 + Singleton<Model>.Instance.Relic.GetRelicGlobalValue(271, base.Owner);
         int nIndex = -1;
-        for (int i = 0; i < (DongShiZhangPatch.CanBattleCryRepeat ? 2 : 1); i++)
+        bool repeat = DongShiZhangPatch.CanBattleCryRepeat;
+        for (int i = 0; i < (repeat ? 2 : 1); i++)
         {
             Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
             for (int j = 0; j < 4; j++)
@@ -490,14 +548,18 @@ public class ActionSummonPrepareNoBattleCry : EventActionBase
                     Vector3 prepareLotteCellPosition = Singleton<Model>.Instance.Element.GetPrepareLotteCellPosition(j, base.Owner);
                     SingletonMono<AssetManager>.Instance.InstantiateLink(lotteCellPosition, prepareLotteCellPosition);
                     nIndex = j;
-                    break;
+                    nCount--;
+                    if (nCount <= 0)
+                    {
+                        break;
+                    }
                 }
             }
         }
 
         if (nIndex == -1)
         {
-            Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
         }
         else
         {
@@ -505,7 +567,7 @@ public class ActionSummonPrepareNoBattleCry : EventActionBase
             ReflectionUtil.TryGetPrivateField(uIGameInfo, "prepareList", out List<PrepareCell> prepareList);
             prepareList[nIndex].UpdateData();
             Singleton<SoundManager>.Instance.PlaySound(133);
-            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+            Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
         }
     }
 }
@@ -733,7 +795,7 @@ public class ActionSumSpecialChange : EventActionBase
         if (currentAttr + 1 >= threshold)
         {
 
-            Singleton<Model>.Instance.Element.DeleteElement(Index, true, Owner, false);
+            Singleton<Model>.Instance.Element.DeleteElement(Index, false, Owner, false);
             Singleton<Model>.Instance.Element.SetElement(Index, summonElementId, level, Owner, true);
 
             Singleton<GameEventManager>.Instance.Dispatch(20015, [Owner]);
@@ -745,6 +807,174 @@ public class ActionSumSpecialChange : EventActionBase
 
         Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(OrderID);
     }
+}
 
+// -------------------- Relic Actions --------------------
+public class ActionAddBirdAttrToEmployee : EventActionBase
+{
+    public override void ExcuteRelic(RelicEntity rRelicEntity, Relics rRelicConf)
+    {
+        if (rRelicConf.TriggerValue.Count == 0)
+        {
+            Plugin.Logger.LogError("ActionAddBirdAttrToEmployee: no trigger value found.");
+            return;
+        }
+        int num = rRelicConf.TriggerValue[0];
+        Vector3 relicPosition = Singleton<Model>.Instance.Relic.GetRelicPosition(base.Index, base.Owner);
+        bool flag = false;
+        for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
+        {
+            ElementEntity elementData = Singleton<Model>.Instance.Element.GetElementData(i, base.Owner);
+            if (elementData.Fill && elementData.Enable && !elementData.Wait)
+            {
+                if (ModRegister.IsValidModId(elementData.ID) && elementData.RaceAttrributeDict.Count <= 0)
+                {
+                    elementData.ChangeRaceAttribute(cfg.element.ERaceType.Bird, 1);
+                    num--;
+                    Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(i, base.Owner);
+                    SingletonMono<AssetManager>.Instance.InstantiateLink(relicPosition, lotteCellPosition);
+                    flag = true;
+                    if (num == 0)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        int orderID = base.OrderID;
+        if (flag)
+        {
+            Singleton<Model>.Instance.Element.UpdateAllRaceAttribute(base.Owner);
+            Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(orderID, 0.6f);
+            return;
+        }
+        Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(orderID);
+    }
+}
 
+public class ActionAddBattleCryElementToCache : EventActionBase
+{
+
+    static List<int> battleCryElementIds = [100001, 100003, 100005, 100011, 100012];
+
+    public override void ExcuteRelic(RelicEntity rRelicEntity, Relics rRelicConf)
+    {
+        if (rRelicConf.TriggerValue.Count == 0)
+        {
+            Plugin.Logger.LogError("ActionAddBattleCryElementToCache: no trigger value found.");
+            return;
+        }
+        int prob = rRelicConf.TriggerValue[0];
+        int rand = UnityEngine.Random.Range(0, 100);
+        if (rand < prob)
+        {
+            var elementModel = Singleton<Model>.Instance.Element;
+            var modModel = Singleton<Model>.Instance.Mod;
+            if (elementModel.Speical) // skip if in special mode
+            {
+                return;
+            }
+            if (ReflectionUtil.TryGetPrivateField(elementModel, "mLockChooseList", out List<int> lockChooseList))
+            {
+                if (lockChooseList.Count < elementModel.CacheElement.Count)
+                {
+                    for (int i = 0; i < elementModel.CacheElement.Count; i++)
+                    {
+                        if (!lockChooseList.Contains(i))
+                        {
+                            // randomly select a battle cry element
+                            int randomIndex = UnityEngine.Random.Range(0, battleCryElementIds.Count);
+                            int elementId = battleCryElementIds[randomIndex];
+                            elementModel.CacheElement[i] = modModel.ModElementConf.DataMap[elementId];
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+}
+
+public class ActionInviteSelected : EventActionBase
+{
+    public override void ExcuteRelic(RelicEntity rRelicEntity, Relics rRelicConf)
+    {
+        List<int> value = rRelicConf.TriggerValue;
+        if (value.Count == 0)
+        {
+            Plugin.Logger.LogWarning("ActionSumTire: no trigger value found.");
+            return;
+        }
+        int prob = value[0];
+        int nIndex = -1;
+
+        foreach (var index in Singleton<BattleManager>.Instance.LoopManager.TargetIndex)
+        {
+            if (UnityEngine.Random.Range(0, 100) >= prob)
+            {
+                continue;
+            }
+            ElementEntity previousElement = Singleton<Model>.Instance.Element.GetElementData(index, base.Owner);
+            Element previousElementConf = Singleton<Model>.Instance.Element.GetElementConf(previousElement.ID);
+            if (previousElement == null || !previousElement.Fill)
+            {
+                return;
+            }
+
+            int triggerThreshold = previousElementConf.Rare;
+            triggerThreshold = Math.Max(triggerThreshold, 1);
+
+            var attrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.Invited);
+            int currentValue = previousElement.GetAttribute(attrId);
+
+            currentValue += 1;
+            if (currentValue >= triggerThreshold)
+            {
+                int nCount = currentValue / triggerThreshold;
+
+                currentValue %= triggerThreshold;
+                previousElement.SetAttribute(attrId, currentValue, true);
+
+                Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(previousElement.Index, base.Owner);
+                for (int j = 0; j < 4; j++)
+                {
+                    if (!Singleton<Model>.Instance.Element.GetPrepareElement(j, base.Owner).Fill)
+                    {
+                        Singleton<Model>.Instance.Element.SetPrepareElement(j, previousElement.ID, 1, base.Owner);
+                        Vector3 prepareLotteCellPosition = Singleton<Model>.Instance.Element.GetPrepareLotteCellPosition(j, base.Owner);
+                        SingletonMono<AssetManager>.Instance.InstantiateLink(lotteCellPosition, prepareLotteCellPosition);
+                        nIndex = j;
+                        nCount--;
+                        if (nCount <= 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                previousElement.ChangeAttribute(attrId, 1);
+            }
+
+        }
+
+        if (nIndex != -1)
+        {
+            Singleton<SoundManager>.Instance.PlaySound(133);
+            Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
+        }
+        else
+        {
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+        }
+    }
+}
+
+public class ActionResetHelmet : EventActionBase
+{
+    public override void ExcuteRelic(RelicEntity rRelicEntity, Relics rRelicConf)
+    {
+        HelmetPatch.Active = true;
+    }
 }
