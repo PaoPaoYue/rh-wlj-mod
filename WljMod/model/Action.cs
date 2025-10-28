@@ -709,6 +709,8 @@ public class ActionSummonAndSplitAttr : EventActionBase
             if (!tmpElement.Fill && !tmpElement.Wait && tmpElement.Enable)
             {
                 Singleton<Model>.Instance.Element.SetElement(i, summonElementId, 1, base.Owner, false);
+                ElementEntity newElement = Singleton<Model>.Instance.Element.GetElementData(i, base.Owner);
+                newElement.SetAttribute(Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5), false);
                 Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(i, base.Owner);
                 SingletonMono<AssetManager>.Instance.InstantiateLink(sourceLotteCellPosition, lotteCellPosition);
                 nIndex = i;
@@ -728,6 +730,8 @@ public class ActionSummonAndSplitAttr : EventActionBase
                 if (!Singleton<Model>.Instance.Element.GetPrepareElement(j, base.Owner).Fill)
                 {
                     Singleton<Model>.Instance.Element.SetPrepareElement(j, summonElementId, 1, base.Owner);
+                    ElementEntity newElement = Singleton<Model>.Instance.Element.GetPrepareElement(j, base.Owner);
+                    newElement.SetAttribute(Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5), false);
                     Vector3 prepareLotteCellPosition = Singleton<Model>.Instance.Element.GetPrepareLotteCellPosition(j, base.Owner);
                     SingletonMono<AssetManager>.Instance.InstantiateLink(sourceLotteCellPosition, prepareLotteCellPosition);
                     nIndex = j;

@@ -20,6 +20,7 @@ public class Plugin : BaseUnityPlugin
         Tired = 100_002,
         Invited = 100_003,
         Invincible = 100_004,
+        SubIcon = 100_005,
     }
 
     public enum Event
@@ -81,6 +82,7 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterVisableAttribute((int)Attribute.Tired, "wlj_attr_tired");
         Register.RegisterVisableAttribute((int)Attribute.Invited, "wlj_attr_invited");
         Register.RegisterVisableAttribute((int)Attribute.Invincible, "wlj_attr_invincible");
+        Register.RegisterEntityAttribute((int)Attribute.SubIcon);
 
         // custom keywords
         Register.RegisterDescTip(100_001, new DescTip(battleCryTitle, battleCryDesc));
@@ -138,5 +140,7 @@ public class Plugin : BaseUnityPlugin
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(QiDiaoChanPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(HelmetPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(AlchemyPatch));
+        HarmonyLib.Harmony.CreateAndPatchAll(typeof(LotteCellPatch));
+        HarmonyLib.Harmony.CreateAndPatchAll(typeof(TestPatch));
     }
 }

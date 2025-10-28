@@ -8,12 +8,12 @@ popd
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo [2/3] Deploying artifact...
-pushd artifact
+pushd artifacts
 call deploy.bat
 popd
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo [3/3] Launching RouletteHero...
-start "" "F:\Steam Games\steamapps\common\RouletteHero\Mod\ModDebug\RouletteHero.exe"
+start "" "F:\Steam Games\steamapps\common\RouletteHero\RouletteHero.exe"
 
 echo Done.

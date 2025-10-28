@@ -52,8 +52,7 @@ static class AlchemyPatch
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel")),
-                new CodeMatch(OpCodes.Add)
+                new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel"))
             )
             .Advance(2)
             .InsertAndAdvance(
@@ -85,8 +84,7 @@ static class AlchemyPatch
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel")),
-                new CodeMatch(OpCodes.Add)
+                new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel"))
             )
             .Advance(2)
             .InsertAndAdvance(
@@ -118,8 +116,7 @@ static class AlchemyPatch
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel")),
-                new CodeMatch(OpCodes.Add)
+                new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel"))
             )
             .Advance(2)
             .InsertAndAdvance(
@@ -151,8 +148,7 @@ static class AlchemyPatch
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel")),
-                new CodeMatch(OpCodes.Add)
+                new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(ElementModel), "GetElementMaxLevel"))
             )
             .Advance(2)
             .InsertAndAdvance(
