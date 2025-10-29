@@ -23,6 +23,6 @@ static class DongShiZhangPatch
         }
     }
 
-    static int DongShiZhangId = 100_009;
+    static int DongShiZhangId = 10009;
 
 }

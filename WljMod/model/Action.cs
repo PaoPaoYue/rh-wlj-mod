@@ -708,9 +708,7 @@ public class ActionSummonAndSplitAttr : EventActionBase
             ElementEntity tmpElement = Singleton<Model>.Instance.Element.GetElementData(i, base.Owner);
             if (!tmpElement.Fill && !tmpElement.Wait && tmpElement.Enable)
             {
-                Singleton<Model>.Instance.Element.SetElement(i, summonElementId, 1, base.Owner, false);
-                ElementEntity newElement = Singleton<Model>.Instance.Element.GetElementData(i, base.Owner);
-                newElement.SetAttribute(Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5), false);
+                SetElementWithAttribute(i, summonElementId, 1, Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5));
                 Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(i, base.Owner);
                 SingletonMono<AssetManager>.Instance.InstantiateLink(sourceLotteCellPosition, lotteCellPosition);
                 nIndex = i;
@@ -729,9 +727,7 @@ public class ActionSummonAndSplitAttr : EventActionBase
             {
                 if (!Singleton<Model>.Instance.Element.GetPrepareElement(j, base.Owner).Fill)
                 {
-                    Singleton<Model>.Instance.Element.SetPrepareElement(j, summonElementId, 1, base.Owner);
-                    ElementEntity newElement = Singleton<Model>.Instance.Element.GetPrepareElement(j, base.Owner);
-                    newElement.SetAttribute(Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5), false);
+                    SetPrepareElementWithAttribute(j, summonElementId, 1, Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5));
                     Vector3 prepareLotteCellPosition = Singleton<Model>.Instance.Element.GetPrepareLotteCellPosition(j, base.Owner);
                     SingletonMono<AssetManager>.Instance.InstantiateLink(sourceLotteCellPosition, prepareLotteCellPosition);
                     nIndex = j;
@@ -766,6 +762,50 @@ public class ActionSummonAndSplitAttr : EventActionBase
                 toElement.SetAttribute(attrType, splitValue, true);
             }
         }
+    }
+
+    private void SetElementWithAttribute(int nIndex, int nID, int nLevel, int attrId, int value)
+    {
+        var elementModel = Singleton<Model>.Instance.Element;
+        var rOwner = EEntityType.Player;
+
+        ElementEntity elementEntity = elementModel.Element[nIndex];
+        if (!elementEntity.Wait && elementEntity.Enable)
+        {
+            if (elementEntity.Fill)
+            {
+                elementModel.ChangePassiveAttribute(nIndex, bAdd: false, rOwner);
+            }
+        
+            elementModel.Element[nIndex].InitData(nID, nLevel, bBinding: true);
+            elementEntity.SetAttribute(attrId, value, false);
+
+            elementModel.ChangePassiveAttribute(nIndex, bAdd: true, rOwner);
+            elementModel.CheckRaceCount(elementEntity, rOwner, true);
+            elementModel.GetElementConf(nID);
+            Vector3 lotteCellPosition = elementModel.GetLotteCellPosition(nIndex, rOwner);
+            SingletonMono<AssetManager>.Instance.InstantiateParticle(17, null, lotteCellPosition, null);
+            Singleton<SoundManager>.Instance.PlaySound(133);
+            Singleton<GameEventManager>.Instance.Dispatch(10005, nIndex, rOwner);
+            Singleton<Model>.Instance.Player.ChangeTotalAttribute(401, 1);
+            Singleton<GameEventManager>.Instance.Dispatch(10039, nIndex, 1, rOwner, true);
+        }
+    }
+    
+    private void SetPrepareElementWithAttribute(int nIndex, int nID, int nLevel, int attrId, int value)
+    {
+        var elementModel = Singleton<Model>.Instance.Element;
+        var rOwner = EEntityType.Player;
+        elementModel.GetPrepareElement(nIndex, rOwner).InitData(nID, nLevel, bBinding: false);
+        elementModel.GetElementConf(nID);
+        var elementEntity = elementModel.GetPrepareElement(nIndex, rOwner);
+        elementEntity.SetAttribute(attrId, value, false);
+        Vector3 prepareLotteCellPosition = elementModel.GetPrepareLotteCellPosition(nIndex, rOwner);
+        SingletonMono<AssetManager>.Instance.InstantiateParticle(17, null, prepareLotteCellPosition, null);
+        Singleton<SoundManager>.Instance.PlaySound(107);
+        Singleton<Model>.Instance.Player.ChangeTotalAttribute(401, 1);
+        Singleton<GameEventManager>.Instance.Dispatch(10035, nIndex, rOwner);
+        Singleton<GameEventManager>.Instance.Dispatch(10039, nIndex, 0, rOwner, true);
     }
 }
 
@@ -868,16 +908,16 @@ public class ActionAddBattleCryElementToCache : EventActionBase
             Plugin.Logger.LogError("ActionAddBattleCryElementToCache: no trigger value found.");
             return;
         }
+        var elementModel = Singleton<Model>.Instance.Element;
+        var modModel = Singleton<Model>.Instance.Mod;
+        if (elementModel.Speical) // skip if in special mode
+        {
+            return;
+        }
         int prob = rRelicConf.TriggerValue[0];
         int rand = UnityEngine.Random.Range(0, 100);
         if (rand < prob)
         {
-            var elementModel = Singleton<Model>.Instance.Element;
-            var modModel = Singleton<Model>.Instance.Mod;
-            if (elementModel.Speical) // skip if in special mode
-            {
-                return;
-            }
             if (ReflectionUtil.TryGetPrivateField(elementModel, "mLockChooseList", out List<int> lockChooseList))
             {
                 if (lockChooseList.Count < elementModel.CacheElement.Count)
@@ -892,7 +932,7 @@ public class ActionAddBattleCryElementToCache : EventActionBase
                             elementModel.CacheElement[i] = modModel.ModElementConf.DataMap[elementId];
                         }
                     }
-
+                    Singleton<GameEventManager>.Instance.Dispatch(10015, []);
                 }
             }
         }

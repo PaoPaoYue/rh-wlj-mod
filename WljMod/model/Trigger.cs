@@ -83,3 +83,15 @@ public class OnTiredTrigger : ElementTrigger
         return element.EntityType == EEntityType.Element;
     }
 }
+
+// -------------------- Relic Triggers --------------------
+public class AfterNormalRefreshTrigger : RelicTrigger
+{
+    public AfterNormalRefreshTrigger() : base(Plugin.Register.GetEventId((int)Plugin.Event.AfterNormalRefresh)) { }
+
+    public override bool OnTrigger(Entity relic, Relics relicConf, EventArg rEventArg, out List<int> actionParams)
+    {
+        actionParams = null;
+        return relic.EntityType == EEntityType.Relic;
+    }
+}

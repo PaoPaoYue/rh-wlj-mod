@@ -6,7 +6,7 @@ namespace WljMod;
 
 class QiDiaoChanPatch
 {
-    static int QiDiaoChanId = 100_018;
+    static int QiDiaoChanId = 10018;
 
     static Dictionary<int, int> attrAddDict = new Dictionary<int, int>()
     {

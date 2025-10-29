@@ -27,6 +27,7 @@ public class Plugin : BaseUnityPlugin
     {
         OnBattleCry = 100_001,
         OnTired = 100_002,
+        AfterNormalRefresh = 100_003,
     }
 
     public enum RelicGlobalValue
@@ -79,9 +80,9 @@ public class Plugin : BaseUnityPlugin
 
         // custom attributes
         Register.RegisterEntityAttribute((int)Attribute.BattleCry);
-        Register.RegisterVisableAttribute((int)Attribute.Tired, "wlj_attr_tired");
-        Register.RegisterVisableAttribute((int)Attribute.Invited, "wlj_attr_invited");
-        Register.RegisterVisableAttribute((int)Attribute.Invincible, "wlj_attr_invincible");
+        Register.RegisterVisableAttribute((int)Attribute.Tired, tiredTitle, "wlj_attr_tired");
+        Register.RegisterVisableAttribute((int)Attribute.Invited, invitedTitle, "wlj_attr_invited");
+        Register.RegisterVisableAttribute((int)Attribute.Invincible, invincibleTitle, "wlj_attr_invincible");
         Register.RegisterEntityAttribute((int)Attribute.SubIcon);
 
         // custom keywords
@@ -93,6 +94,7 @@ public class Plugin : BaseUnityPlugin
         // custom events
         Register.RegisterEvent((int)Event.OnBattleCry);
         Register.RegisterEvent((int)Event.OnTired);
+        Register.RegisterEvent((int)Event.AfterNormalRefresh);
 
         // custom triggers
         Register.RegisterElementTrigger(100_001, new BattleCryTrigger());
@@ -101,6 +103,8 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterElementTrigger(100_004, new OnTiredTrigger());
 
         Register.RegisterPlayerTrigger(200_001, new SellFutureTechElementTrigger());
+
+        Register.RegisterRelicTrigger(300_001, new AfterNormalRefreshTrigger());
 
         // custom actions
         Register.RegisterEventAction(100_001, new ActionTire());
@@ -141,6 +145,6 @@ public class Plugin : BaseUnityPlugin
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(HelmetPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(AlchemyPatch));
         HarmonyLib.Harmony.CreateAndPatchAll(typeof(LotteCellPatch));
-        HarmonyLib.Harmony.CreateAndPatchAll(typeof(TestPatch));
+        HarmonyLib.Harmony.CreateAndPatchAll(typeof(UIGameInfoPatch));
     }
 }

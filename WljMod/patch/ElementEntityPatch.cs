@@ -33,6 +33,8 @@ static class ElementEntityPatch
     {
         var battleCryAttrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.BattleCry);
         rElement.AttributeDict[battleCryAttrId] = 0;
+        var subIconAttrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon);
+        rElement.AttributeDict[subIconAttrId] = 0;
     }
 
 }
