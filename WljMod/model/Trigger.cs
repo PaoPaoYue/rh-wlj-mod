@@ -17,7 +17,7 @@ public class SellFutureTechElementTrigger : PlayerTrigger
         if (rEventArg != null && rEventArg.Args.Count > 1 && player.EntityType == EEntityType.Player)
         {
             var elementId = rEventArg.Get<int>(1);
-            return ModRegister.IsValidModId(elementId);
+            return elementId > 10000;
 
         }
         return false;

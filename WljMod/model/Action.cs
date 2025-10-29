@@ -871,7 +871,7 @@ public class ActionAddBirdAttrToEmployee : EventActionBase
             ElementEntity elementData = Singleton<Model>.Instance.Element.GetElementData(i, base.Owner);
             if (elementData.Fill && elementData.Enable && !elementData.Wait)
             {
-                if (ModRegister.IsValidModId(elementData.ID) && elementData.RaceAttrributeDict.Count <= 0)
+                if (elementData.ID > 10000 && elementData.RaceAttrributeDict.Count <= 0)
                 {
                     elementData.ChangeRaceAttribute(cfg.element.ERaceType.Bird, 1);
                     num--;
