@@ -30,7 +30,7 @@ public class ActionSumAddEvolution : EventActionBase
         {
             player.SetAttribute(23, currentValue % threshold, true);
             Singleton<Model>.Instance.Buff.AddRandomItem(1);
-            Singleton<GameEventManager>.Instance.Dispatch(20015, [base.Owner]);
+            Singleton<GameEventManager>.Instance.Dispatch(EventName.OnSumEnd, [base.Owner]);
         }
         else
         {
@@ -430,10 +430,14 @@ public class ActionSumSelfUpdgrade : EventActionBase
             currentValue %= triggerThreshold;
             elementData.SetAttribute(23, currentValue, true);
 
+            if (elementData.Level < Singleton<Model>.Instance.Element.GetElementMaxLevel(Owner))
+            {
+                elementData.Upgrade(false);
+                ((LotteCell)Singleton<Model>.Instance.Element.GetLotteCell(base.Index, base.Owner)).OnUpgrade();
+                Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
+            }
 
-            elementData.Upgrade(false);
-            ((LotteCell)Singleton<Model>.Instance.Element.GetLotteCell(base.Index, base.Owner)).OnUpgrade();
-            Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
+            Singleton<GameEventManager>.Instance.Dispatch(EventName.OnSumEnd, [base.Owner]);
         }
         else
         {
@@ -452,7 +456,7 @@ public class ActionInvite : EventActionBase
 
         if (value.Count == 0)
         {
-            Plugin.Logger.LogWarning("ActionSumTire: no trigger value found.");
+            Plugin.Logger.LogWarning("ActionInvite: no trigger value found.");
             return;
         }
 
@@ -776,7 +780,7 @@ public class ActionSummonAndSplitAttr : EventActionBase
             {
                 elementModel.ChangePassiveAttribute(nIndex, bAdd: false, rOwner);
             }
-        
+
             elementModel.Element[nIndex].InitData(nID, nLevel, bBinding: true);
             elementEntity.SetAttribute(attrId, value, false);
 
@@ -791,7 +795,7 @@ public class ActionSummonAndSplitAttr : EventActionBase
             Singleton<GameEventManager>.Instance.Dispatch(10039, nIndex, 1, rOwner, true);
         }
     }
-    
+
     private void SetPrepareElementWithAttribute(int nIndex, int nID, int nLevel, int attrId, int value)
     {
         var elementModel = Singleton<Model>.Instance.Element;
@@ -842,7 +846,7 @@ public class ActionSumSpecialChange : EventActionBase
             Singleton<Model>.Instance.Element.DeleteElement(Index, false, Owner, false);
             Singleton<Model>.Instance.Element.SetElement(Index, summonElementId, level, Owner, true);
 
-            Singleton<GameEventManager>.Instance.Dispatch(20015, [Owner]);
+            Singleton<GameEventManager>.Instance.Dispatch(EventName.OnSumEnd, [Owner]);
         }
         else
         {
