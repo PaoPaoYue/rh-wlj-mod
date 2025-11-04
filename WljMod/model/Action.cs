@@ -131,6 +131,68 @@ public class ActionSumTire : EventActionBase
     }
 }
 
+public class ActionSmallRotateSumTire : EventActionBase
+{
+    public override void ExcuteElement()
+    {
+        if (!Singleton<Model>.Instance.Element.Running || Singleton<BattleManager>.Instance.TurnType != ETurnType.PlayerTurn)
+        {
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+            return;
+        }
+
+        ElementEntity elementData = Singleton<Model>.Instance.Element.GetElementData(base.Index, base.Owner);
+        List<int> value = base.ElementConf.TriggerValue[base.Level - 1].Value;
+        if (value.Count < 1)
+        {
+            Plugin.Logger.LogWarning("ActionSmallRotateSumTire: insufficient trigger values.");
+            return;
+        }
+
+        int nMaxCount = value[0];
+        int triggerThreshold = value[1];
+        int triggerValue = value[2];
+
+        
+        triggerThreshold += Singleton<Model>.Instance.Relic.GetRelicGlobalValue(225, base.Owner);
+        triggerThreshold = Math.Max(triggerThreshold, 1);
+
+        int currentValue = elementData.GetAttribute(23);
+
+        currentValue += 1;
+
+        if (currentValue >= triggerThreshold)
+        {
+            int nValue = currentValue / triggerThreshold * triggerValue;
+
+            currentValue %= triggerThreshold;
+            elementData.SetAttribute(23, currentValue, true);
+
+            var attrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.Tired);
+            elementData.ChangeAttribute(attrId, nValue);
+
+            var eventId = Plugin.Register.GetEventId((int)Plugin.Event.OnTired);
+            Singleton<GameEventManager>.Instance.Dispatch(eventId, [elementData.Index, nValue, base.Owner]);
+            Singleton<GameEventManager>.Instance.Dispatch(EventName.OnSumEnd, [base.Owner]);
+        }
+        else
+        {
+            elementData.ChangeAttribute(23, 1);
+        }
+
+        ILotteCell lotteCell = Singleton<Model>.Instance.Element.GetLotteCell(base.Index, base.Owner);
+        string rIcon = string.Format("element_dice{0}", nMaxCount);
+        int nOrderID = base.OrderID;
+        int index = base.Index;
+        UIAnimText.ShowFlyText(lotteCell.Trans.position, Singleton<Model>.Instance.Buff.GetSmallPointPosition(base.Owner), rIcon, StringUtil.AddNumberToString(nMaxCount), delegate
+        {
+            Singleton<BattleManager>.Instance.LoopManager.SmallLoopingCount += nMaxCount;
+            Singleton<SoundManager>.Instance.PlaySound(113);
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(nOrderID);
+        });
+    }
+}
+
 public class ActionBlockOrAttackAdd : EventActionBase
 {
     public override void ExcuteElement()
@@ -146,15 +208,15 @@ public class ActionBlockOrAttackAdd : EventActionBase
 
         int triggerValue = value[0];
 
-        int previousId = (elementData.Index + Singleton<Model>.Instance.Element.LoopItemCount - 1) % Singleton<Model>.Instance.Element.LoopItemCount;
-        int nextId = (elementData.Index + 1) % Singleton<Model>.Instance.Element.LoopItemCount;
+        int previousIndex = (elementData.Index + Singleton<Model>.Instance.Element.LoopItemCount - 1) % Singleton<Model>.Instance.Element.LoopItemCount;
+        int nextIndex = (elementData.Index + 1) % Singleton<Model>.Instance.Element.LoopItemCount;
         var relicAttrId = Plugin.Register.GetRelicGlobalValueId((int)Plugin.RelicGlobalValue.Alarm);
         bool isAll = Singleton<Model>.Instance.Relic.GetRelicGlobalValue(relicAttrId, base.Owner) > 0;
         bool repeat = DongShiZhangPatch.CanBattleCryRepeat;
         for (int i = 0; i < (repeat ? 2 : 1); i++)
         {
-            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(previousId, base.Owner), triggerValue, isAll);
-            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(nextId, base.Owner), triggerValue, isAll);
+            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(previousIndex, base.Owner), triggerValue, isAll);
+            ChangeBlockOrAttack(Singleton<Model>.Instance.Element.GetElementData(nextIndex, base.Owner), triggerValue, isAll);
         }
 
         int orderID = base.OrderID;
@@ -460,8 +522,8 @@ public class ActionInvite : EventActionBase
             return;
         }
 
-        int previousId = (elementData.Index + Singleton<Model>.Instance.Element.LoopItemCount - 1) % Singleton<Model>.Instance.Element.LoopItemCount;
-        ElementEntity previousElement = Singleton<Model>.Instance.Element.GetElementData(previousId, base.Owner);
+        int previousIndex = (elementData.Index + Singleton<Model>.Instance.Element.LoopItemCount - 1) % Singleton<Model>.Instance.Element.LoopItemCount;
+        ElementEntity previousElement = Singleton<Model>.Instance.Element.GetElementData(previousIndex, base.Owner);
         Element previousElementConf = Singleton<Model>.Instance.Element.GetElementConf(previousElement.ID);
         if (previousElement == null || !previousElement.Fill)
         {
@@ -684,11 +746,101 @@ public class ActionSmallRotateAndChange : EventActionBase
         {
             Singleton<BattleManager>.Instance.LoopManager.SmallLoopingCount += nMaxCount;
             Singleton<Model>.Instance.Element.DeleteElement(index, true, base.Owner, false);
-            Singleton<Model>.Instance.Element.SetElement(index, summonElementId, 1, base.Owner, true);
+            Singleton<Model>.Instance.Element.SetElement(index, summonElementId, Level, base.Owner, true);
             Singleton<SoundManager>.Instance.PlaySound(113);
             Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(nOrderID);
         });
     }
+}
+
+public class ActionSumAllAddAndChange : EventActionBase
+{
+    public override void ExcuteElement()
+    {
+        ElementEntity elementData = Singleton<Model>.Instance.Element.GetElementData(base.Index, base.Owner);
+        Element elementConf = Singleton<Model>.Instance.Element.GetElementConf(elementData.ID);
+        List<int> value = base.ElementConf.TriggerValue[base.Level - 1].Value;
+        List<int> otherValue = base.ElementConf.OtherValue;
+        if (value.Count < 1)
+        {
+            Plugin.Logger.LogWarning("ActionSumAllAddAndChange: insufficient trigger values.");
+            return;
+        }
+        if (otherValue.Count < 1)
+        {
+            Plugin.Logger.LogWarning("ActionSumAllAddAndChange: insufficient other values.");
+            return;
+        }
+        int nAddType = otherValue[0];
+        int summonElementId = otherValue[1];
+        int triggerThreshold = value[0];
+        int nAddCount = value[1];
+
+        triggerThreshold += Singleton<Model>.Instance.Relic.GetRelicGlobalValue(225, base.Owner);
+        triggerThreshold = Math.Max(triggerThreshold, 1);
+
+        int currentValue = elementData.GetAttribute(23);
+        int increment = 1;
+        if (base.Param != null && elementConf.TriggerParam.Count == 2)
+        {
+            increment = Mathf.Abs(base.Param[0]);
+        }
+
+        currentValue += increment;
+
+        if (currentValue >= triggerThreshold)
+        {
+
+            currentValue %= triggerThreshold;
+            elementData.SetAttribute(23, currentValue, true);
+
+            Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
+            bool flag = false;
+            string attributeIcon = Singleton<Model>.Instance.Buff.GetAttributeIcon(nAddType);
+
+            for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
+            {
+                ElementEntity rEntity = Singleton<Model>.Instance.Element.GetElementData(i, base.Owner);
+
+                if (!rEntity.Fill || !rEntity.Enable || rEntity.Wait) continue;
+
+                flag = true;
+
+                if (i == base.Index)
+                {
+                    Singleton<Model>.Instance.Element.DeleteElement(i, true, base.Owner, false);
+                    Singleton<Model>.Instance.Element.SetElement(i, summonElementId, Level, base.Owner, true);
+                    rEntity.ChangeAttribute(nAddType, nAddCount);
+                }
+                else
+                {
+                    Vector3 targetPos = Singleton<Model>.Instance.Element.GetLotteCellPosition(i, base.Owner);
+                    UIAnimText.ShowFlyText(lotteCellPosition, targetPos, attributeIcon, nAddCount.ToString(), () =>
+                    {
+                        rEntity.ChangeAttribute(nAddType, nAddCount);
+                    });
+                }
+            }
+
+            Singleton<GameEventManager>.Instance.Dispatch(EventName.OnSumEnd, [base.Owner]);
+            if (flag)
+            {
+                Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
+            }
+            else
+            {
+                Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+            }
+
+        }
+        else
+        {
+            elementData.ChangeAttribute(23, increment);
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+        }
+
+    }
+
 }
 
 public class ActionSummonAndSplitAttr : EventActionBase

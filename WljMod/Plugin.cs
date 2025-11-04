@@ -122,6 +122,8 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterEventAction(100_013, new ActionSmallRotateAndChange());
         Register.RegisterEventAction(100_014, new ActionSummonAndSplitAttr());
         Register.RegisterEventAction(100_015, new ActionSumSpecialChange());
+        Register.RegisterEventAction(100_016, new ActionSmallRotateSumTire());
+        Register.RegisterEventAction(100_017, new ActionSumAllAddAndChange());
 
         Register.RegisterEventAction(200_001, new ActionSumAddEvolution());
 
