@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 :: Set the target folder path (relative to parent artifacts folder)
-set "TARGET_DIR=..\artifacts\王老菊Mod"
+set "TARGET_DIR=..\artifacts\王老菊Mod\plugins"
 
 :: Build the project using dotnet CLI
 echo Building the project...
