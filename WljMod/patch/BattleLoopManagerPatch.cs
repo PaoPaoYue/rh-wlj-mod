@@ -17,7 +17,7 @@ static class BattleLoopManagerPatch
         for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
         {
             var tempElement = Singleton<Model>.Instance.Element.GetElementData(i, __instance.Owner);
-            if (tempElement != null && tempElement.Fill && tempElement.GetAttribute(tiredAttrId) > 0)
+            if (tempElement != null && tempElement.Fill && tempElement.Enable && tempElement.GetAttribute(tiredAttrId) > 0)
             {
                 ___LoopIndexList.Remove(i);
             }
@@ -34,7 +34,7 @@ static class BattleLoopManagerPatch
         for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
         {
             var tempElement = Singleton<Model>.Instance.Element.GetElementData(i, __instance.Owner);
-            if (tempElement != null && tempElement.Fill && tempElement.GetAttribute(tiredAttrId) > 0)
+            if (tempElement != null && tempElement.Fill && tempElement.Enable && tempElement.GetAttribute(tiredAttrId) > 0)
             {
                 ___LoopIndexList.Add(i);
             }
@@ -51,7 +51,7 @@ static class BattleLoopManagerPatch
         for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
         {
             var tempElement = Singleton<Model>.Instance.Element.GetElementData(i, __instance.Owner);
-            if (tempElement != null && tempElement.Fill && tempElement.GetAttribute(tiredAttrId) > 0)
+            if (tempElement != null && tempElement.Fill && tempElement.Enable && tempElement.GetAttribute(tiredAttrId) > 0)
             {
                 ___LoopIndexList.Remove(i);
             }
@@ -68,7 +68,7 @@ static class BattleLoopManagerPatch
         for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
         {
             var tempElement = Singleton<Model>.Instance.Element.GetElementData(i, __instance.Owner);
-            if (tempElement != null && tempElement.Fill && tempElement.GetAttribute(tiredAttrId) > 0)
+            if (tempElement != null && tempElement.Fill && tempElement.Enable && tempElement.GetAttribute(tiredAttrId) > 0)
             {
                 ___LoopIndexList.Add(i);
             }

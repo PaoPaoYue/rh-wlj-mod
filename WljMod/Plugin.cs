@@ -20,7 +20,8 @@ public class Plugin : BaseUnityPlugin
         Tired = 100_002,
         Invited = 100_003,
         Invincible = 100_004,
-        SubIcon = 100_005,
+        Durability = 100_005,
+        SubIcon = 100_006,
     }
 
     public enum Event
@@ -52,6 +53,7 @@ public class Plugin : BaseUnityPlugin
         var invitedDesc = Register.RegisterLocalization(100_006, CN: "层数等于单位稀有度（最低为1）时，在准备区获得一个原版复制。");
         var invincibleTitle = Register.RegisterLocalization(100_007, CN: "免伤");
         var invincibleDesc = Register.RegisterLocalization(100_008, CN: "抵挡一次受到的伤害。");
+        var durabilityTitle = Register.RegisterLocalization(100_009, CN: "耐久");
 
         var roleName = Register.RegisterLocalization(200_001, CN: "王老菊");
         var roleDesc = Register.RegisterLocalization(200_002, CN: "每出售<color=#008E11>{0}</color>个未来科技单位，获得一个<sprite=14>。");
@@ -83,6 +85,7 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterVisableAttribute((int)Attribute.Tired, tiredTitle, "wlj_attr_tired");
         Register.RegisterVisableAttribute((int)Attribute.Invited, invitedTitle, "wlj_attr_invited");
         Register.RegisterVisableAttribute((int)Attribute.Invincible, invincibleTitle, "wlj_attr_invincible");
+        Register.RegisterVisableAttribute((int)Attribute.Durability, durabilityTitle, "wlj_attr_durability");
         Register.RegisterEntityAttribute((int)Attribute.SubIcon);
 
         // custom keywords
@@ -120,7 +123,7 @@ public class Plugin : BaseUnityPlugin
         Register.RegisterEventAction(100_011, new ActionSummonPrepareNoBattleCry());
         Register.RegisterEventAction(100_012, new ActionSumSpecialRefresh());
         Register.RegisterEventAction(100_013, new ActionSmallRotateAndChange());
-        Register.RegisterEventAction(100_014, new ActionSummonAndSplitAttr());
+        Register.RegisterEventAction(100_014, new ActionSummonAndSplit());
         Register.RegisterEventAction(100_015, new ActionSumSpecialChange());
         Register.RegisterEventAction(100_016, new ActionSmallRotateSumTire());
         Register.RegisterEventAction(100_017, new ActionSumAllAddAndChange());

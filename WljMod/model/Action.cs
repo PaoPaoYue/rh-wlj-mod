@@ -153,7 +153,7 @@ public class ActionSmallRotateSumTire : EventActionBase
         int triggerThreshold = value[1];
         int triggerValue = value[2];
 
-        
+
         triggerThreshold += Singleton<Model>.Instance.Relic.GetRelicGlobalValue(225, base.Owner);
         triggerThreshold = Math.Max(triggerThreshold, 1);
 
@@ -843,81 +843,99 @@ public class ActionSumAllAddAndChange : EventActionBase
 
 }
 
-public class ActionSummonAndSplitAttr : EventActionBase
+public class ActionSummonAndSplit : EventActionBase
 {
-    private static List<int> allowedAttrTypes = [3, 8, 9, 11, 14, 18];
     public override void ExcuteElement()
     {
         ElementEntity elementData = Singleton<Model>.Instance.Element.GetElementData(base.Index, base.Owner);
+        List<int> value = base.ElementConf.TriggerValue[base.Level - 1].Value;
         List<int> otherValue = base.ElementConf.OtherValue;
+        if (value.Count < 1)
+        {
+            Plugin.Logger.LogWarning("ActionSummonAndSplit: insufficient trigger values.");
+            return;
+        }
         if (otherValue.Count < 1)
         {
-            Plugin.Logger.LogWarning("ActionSummonAndSplitAttr: insufficient other values.");
+            Plugin.Logger.LogWarning("ActionSummonAndSplit: insufficient other values.");
             return;
         }
 
-        int summonElementId = otherValue[0];
-        int nIndex = -1;
-        Vector3 sourceLotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
-        for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
+        var durabilityAttrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.Durability);
+        var durability = elementData.GetAttribute(durabilityAttrId);
+        if (durability <= 0)
         {
-            ElementEntity tmpElement = Singleton<Model>.Instance.Element.GetElementData(i, base.Owner);
-            if (!tmpElement.Fill && !tmpElement.Wait && tmpElement.Enable)
-            {
-                SetElementWithAttribute(i, summonElementId, 1, Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5));
-                Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(i, base.Owner);
-                SingletonMono<AssetManager>.Instance.InstantiateLink(sourceLotteCellPosition, lotteCellPosition);
-                nIndex = i;
-                break;
-            }
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+            return;
         }
-        if (nIndex != -1)
+
+        var nCount = value[0];
+        var summonElementId = otherValue[0];
+        Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
+
+        elementData.ChangeAttribute(durabilityAttrId, -1);
+        if (!SummonElement(summonElementId, nCount, 1, durability % 4, lotteCellPosition, base.Owner))
         {
-            ElementEntity summoned = Singleton<Model>.Instance.Element.GetElementData(nIndex, base.Owner);
-            SplitAttrs(elementData, summoned);
-            Singleton<Model>.Instance.Element.CheckRaceCount(summoned, EEntityType.Player, true);
+            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+            return;
         }
-        else
+        Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.6f);
+    }
+
+    private bool SummonElement(int nElementID, int nCount, int nLevel, int subIcon, Vector3 rSourPos, EEntityType rOwner)
+    {
+        var elmenetModel = Singleton<Model>.Instance.Element;
+        int num = -1;
+        nCount += Singleton<Model>.Instance.Relic.GetRelicGlobalValue(271, rOwner);
+        for (int i = 0; i < elmenetModel.LoopItemCount; i++)
         {
-            for (int j = 0; j < 4; j++)
+            ElementEntity elementData = elmenetModel.GetElementData(i, rOwner);
+            if (!elementData.Fill && !elementData.Wait && elementData.Enable)
             {
-                if (!Singleton<Model>.Instance.Element.GetPrepareElement(j, base.Owner).Fill)
+                SetElementWithAttribute(i, nElementID, nLevel, Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), subIcon);
+                nCount--;
+                Vector3 lotteCellPosition = elmenetModel.GetLotteCellPosition(i, rOwner);
+                SingletonMono<AssetManager>.Instance.InstantiateLink(rSourPos, lotteCellPosition);
+                num = i;
+                if (nCount <= 0)
                 {
-                    SetPrepareElementWithAttribute(j, summonElementId, 1, Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), UnityEngine.Random.Range(1, 5));
-                    Vector3 prepareLotteCellPosition = Singleton<Model>.Instance.Element.GetPrepareLotteCellPosition(j, base.Owner);
-                    SingletonMono<AssetManager>.Instance.InstantiateLink(sourceLotteCellPosition, prepareLotteCellPosition);
-                    nIndex = j;
                     break;
                 }
             }
-            if (nIndex != -1)
-            {
-                ElementEntity summoned = Singleton<Model>.Instance.Element.GetPrepareElement(nIndex, base.Owner);
-                SplitAttrs(elementData, summoned);
-            }
         }
-        if (nIndex != -1)
-        {
-            Singleton<BattleManager>.Instance.OrderManager.DelayBattleOrderExcuteEnd(base.OrderID, 0.3f);
-        }
-        else
-        {
-            Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
-        }
-    }
 
-    private void SplitAttrs(ElementEntity fromElement, ElementEntity toElement)
-    {
-        foreach (var attrType in allowedAttrTypes)
+        if (num != -1)
         {
-            int attrValue = fromElement.GetAttribute(attrType);
-            if (attrValue > 0)
+            ElementEntity elementData2 = Singleton<Model>.Instance.Element.GetElementData(num, rOwner);
+            elmenetModel.CheckRaceCount(elementData2, EEntityType.Player, bUpdateRace: true);
+        }
+
+        if (nCount > 0)
+        {
+            for (int j = 0; j < 4; j++)
             {
-                int splitValue = (attrValue + 1) / 2;
-                fromElement.SetAttribute(attrType, attrValue - splitValue, true);
-                toElement.SetAttribute(attrType, splitValue, true);
+                if (!elmenetModel.GetPrepareElement(j, rOwner).Fill)
+                {
+                    SetPrepareElementWithAttribute(j, nElementID, nLevel, Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.SubIcon), subIcon);
+                    nCount--;
+                    Vector3 prepareLotteCellPosition = elmenetModel.GetPrepareLotteCellPosition(j, rOwner);
+                    SingletonMono<AssetManager>.Instance.InstantiateLink(rSourPos, prepareLotteCellPosition);
+                    num = j;
+                    if (nCount <= 0)
+                    {
+                        break;
+                    }
+                }
             }
         }
+
+        if (num == -1)
+        {
+            return false;
+        }
+
+        Singleton<SoundManager>.Instance.PlaySound(133);
+        return true;
     }
 
     private void SetElementWithAttribute(int nIndex, int nID, int nLevel, int attrId, int value)

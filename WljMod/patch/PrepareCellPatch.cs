@@ -84,7 +84,7 @@ static class PrepareCellPatch
         int subIconIndex = elementData.GetAttribute(subIconAttrId);
         if (subIconIndex > 0)
         {
-            return $"wlj_element_19_{subIconIndex}";
+            return $"wlj_element_20_{subIconIndex}";
         }
         if ((elementData.ID == 10010 || elementData.ID == 10011) && elementData.Level > 1)
         {

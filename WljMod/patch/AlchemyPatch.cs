@@ -9,6 +9,8 @@ namespace WljMod;
 
 static class AlchemyPatch
 {
+    private static int bodyId = 10020;
+
     static bool CanAlchemyCombine(ElementEntity e1, ElementEntity e2)
     {
         int elementMaxLevel = Singleton<Model>.Instance.Element.GetElementMaxLevel(EEntityType.Player);
@@ -16,6 +18,10 @@ static class AlchemyPatch
             return false;
         var ec1 = Singleton<Model>.Instance.Element.GetElementConf(e1.ID);
         var ec2 = Singleton<Model>.Instance.Element.GetElementConf(e2.ID);
+        if (e2.ID == bodyId && ec1.Rare < ec2.Rare)
+        {
+            return true;
+        }
         if (ec1.RaceType == ERaceType.Mod2)
         {
             var relicAttrId = Plugin.Register.GetRelicGlobalValueId((int)Plugin.RelicGlobalValue.Alchemy);
@@ -29,13 +35,17 @@ static class AlchemyPatch
         }
         return false;
     }
-    
+
     static bool CanAlchemyCombineChooseItem(ElementEntity e, Element ec)
     {
         if (e == null || !e.Fill)
             return false;
         var ec1 = Singleton<Model>.Instance.Element.GetElementConf(e.ID);
         var ec2 = ec;
+        if (ec2.Id == bodyId && ec1.Rare < ec2.Rare)
+        {
+            return true;
+        }
         if (ec1.RaceType == ERaceType.Mod2)
         {
             var relicAttrId = Plugin.Register.GetRelicGlobalValueId((int)Plugin.RelicGlobalValue.Alchemy);
@@ -227,7 +237,7 @@ static class AlchemyPatch
             .InstructionEnumeration();
     }
 
-    
+
     [HarmonyPatch(typeof(ElementModel.ElementInteractive), "DropChooseItemToLoop")]
     [HarmonyTranspiler]
     static IEnumerable<CodeInstruction> DropChooseItemToLoopTranspiler(IEnumerable<CodeInstruction> instructions)
