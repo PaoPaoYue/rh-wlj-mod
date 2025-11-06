@@ -346,7 +346,7 @@ public class ActionSelfStealAttackFromEnemy : EventActionBase
 
 public class ActionStealHalfAttrsFromRandomTired : EventActionBase
 {
-    private static List<int> allowedAttrTypes = [3, 8, 9, 11, 14, 18];
+    private static List<int> allowedAttrTypes = [3, 8, 9, 11, 13, 14, 18];
 
     public override void ExcuteElement()
     {
