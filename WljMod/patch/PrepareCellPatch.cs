@@ -48,7 +48,10 @@ static class PrepareCellPatch
         {
             var elementConf = Singleton<Model>.Instance.Element.GetElementConf(elementData.ID);
             var hasDoneBattleCryAttrId = Plugin.Register.GetEntityAttributeId((int)Plugin.Attribute.BattleCry);
-            if (elementConf.Desctip != null && elementConf.Desctip.Contains((cfg.element.Etip)hasDoneBattleCryAttrId) && elementData.GetAttribute(hasDoneBattleCryAttrId) == 0)
+            if (elementConf.Desctip != null &&
+                elementConf.Desctip.Contains((cfg.element.Etip)hasDoneBattleCryAttrId) &&
+                elementConf.Id != DongShiZhangPatch.DongShiZhangId &&
+                elementData.GetAttribute(hasDoneBattleCryAttrId) == 0)
             {
                 batteCrayImageObjs[index].SetActive(true);
                 return;
