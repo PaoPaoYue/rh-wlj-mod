@@ -774,7 +774,8 @@ public class ActionSumAllAddAndChange : EventActionBase
         int nAddType = otherValue[0];
         int summonElementId = otherValue[1];
         int triggerThreshold = value[0];
-        int nAddCount = value[1];
+        int nAddCount = 0;
+        elementData.AttributeDict.TryGetValue(nAddType, out nAddCount);
 
         triggerThreshold += Singleton<Model>.Instance.Relic.GetRelicGlobalValue(225, base.Owner);
         triggerThreshold = Math.Max(triggerThreshold, 1);
@@ -794,8 +795,14 @@ public class ActionSumAllAddAndChange : EventActionBase
             currentValue %= triggerThreshold;
             elementData.SetAttribute(23, currentValue, true);
 
-            Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
+            if (nAddCount <= 0)
+            {
+                Singleton<BattleManager>.Instance.OrderManager.OnBattleOrderExcuteEnd(base.OrderID);
+                return;
+            }
+            
             bool flag = false;
+            Vector3 lotteCellPosition = Singleton<Model>.Instance.Element.GetLotteCellPosition(base.Index, base.Owner);
             string attributeIcon = Singleton<Model>.Instance.Buff.GetAttributeIcon(nAddType);
 
             for (int i = 0; i < Singleton<Model>.Instance.Element.LoopItemCount; i++)
